@@ -1,3 +1,9 @@
+# This repository has been archived, and all future developments made on this project will be kept private in order to fight against piracy. Do not ask us for the source code, we will not give it.
+
+**Below is the original README.**
+
+
+
 # Shopdeck: Your Nintendo 3DS eShop Replacement
 
 Note that this is still WIP ⚠️
