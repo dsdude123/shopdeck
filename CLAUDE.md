@@ -38,28 +38,47 @@ Settings in `shopdeck/settings.py`:
 - `TOS_ESHOP` — custom terms of service text shown in the eShop.
 - `AUTH_USER_MODEL` is `shopdeckdb.User` (extends `AbstractUser` with a `linked_ds` FK to `Client3DS`).
 
-## Common Commands
+## Docker Deployment
+
+The primary deployment method is Docker Compose. It runs 5 services: PostgreSQL, Django (gunicorn), Flask (gunicorn), nginx (reverse proxy for browsers), and mitmproxy (forward proxy replacing Charles Proxy for 3DS traffic).
 
 ```bash
-# Install dependencies
+# Start all services
+cp .env.example .env  # then edit .env
+docker compose up -d --build
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+
+# Import CIA files
+docker compose exec django python cia-helper.py <file.cia>
+```
+
+### Proxy Architecture
+
+The mitmproxy container (port 8888) replaces Charles Proxy. The addon script at `proxy/addon.py` routes by hostname:
+- `*.nintendowifi.net` → Flask container (SOAP/CDN)
+- `*.nintendo.net` → Django container (API/metadata)
+- All other traffic passes through to the internet.
+
+## Local Development (without Docker)
+
+```bash
 pip install -r requirements.txt
-
-# Run Django server (API + Web Portal)
-python manage.py runserver
-
-# Run Flask server (SOAP services)
-python main.py
-
-# Database migrations
-python manage.py makemigrations
 python manage.py migrate
-
-# Create admin user
 python manage.py createsuperuser
 
-# Django admin panel
-# Available at /admin/ when Django server is running
+# Terminal 1
+python manage.py runserver
+
+# Terminal 2
+python main.py
 ```
+
+All settings in `shopdeck/settings.py` read from environment variables with fallback defaults, so local dev works without any `.env` file.
 
 ## Key Domain Concepts
 
@@ -77,4 +96,4 @@ python manage.py createsuperuser
 
 ## Database
 
-Default is SQLite (`db.sqlite3`). The `requirements.txt` includes `psycopg2` for PostgreSQL support. The `metadata/views.py` imports `django.contrib.postgres.fields`, so some features may require PostgreSQL.
+Docker uses PostgreSQL (required — `metadata/views.py` imports `django.contrib.postgres.fields`). Local dev falls back to SQLite if `POSTGRES_DB` env var is not set, but some metadata features will not work without PostgreSQL.

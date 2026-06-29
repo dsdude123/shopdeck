@@ -1,0 +1,16 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+db.sqlite3
+db.sqlite3-journal
+.env
+.venv
+venv/
+env/
+*.egg-info
+.mypy_cache
+.pytest_cache
+nginx/ssl/*.pem
+nginx/ssl/*.key

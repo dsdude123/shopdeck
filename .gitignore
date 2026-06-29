@@ -127,3 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Docker SSL certs
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt

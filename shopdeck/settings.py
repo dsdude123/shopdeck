@@ -10,22 +10,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-1o&xlvoqsao=6i#h0kg6)n8xnte8%x7#ll7n4ky8ppgbo!=0bu')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1o&xlvoqsao=6i#h0kg6)n8xnte8%x7#ll7n4ky8ppgbo!=0bu'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -76,12 +71,24 @@ WSGI_APPLICATION = 'shopdeck.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB'),
+            'USER': os.environ.get('POSTGRES_USER', 'shopdeck'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+            'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -126,20 +133,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Server URLS (dont include a trailing slash at the end)
-SOAP_URL = "soap.example.com"
-METADATA_API_URL = "api.example.com"
+SOAP_URL = os.environ.get('SOAP_URL', 'ecs.c.shop.nintendowifi.net')
+METADATA_API_URL = os.environ.get('METADATA_API_URL', 'ninja.ctr.shop.nintendo.net')
 
-# TOS
-TOS_ESHOP = "This is YOUR own custom shop!\nStart customizing it!\n(change this message in shopdeck/settings.py)"
+TOS_ESHOP = os.environ.get('TOS_ESHOP', "This is YOUR own custom shop!\nStart customizing it!\n(change this message in shopdeck/settings.py)")
 
-#Maintenance Message
-MAINTENANCE_MSG = "Maintenance message."
+MAINTENANCE_MSG = os.environ.get('MAINTENANCE_MSG', 'Maintenance message.')
 
-# Enable if maintenance is necessary
-IN_MAINTENANCE = False
+IN_MAINTENANCE = os.environ.get('IN_MAINTENANCE', 'False').lower() in ('true', '1', 'yes')
 
-# Name of the web interface
-WEBUI_NAME = "Shopdeck"
+WEBUI_NAME = os.environ.get('WEBUI_NAME', 'Shopdeck')
 
 #dont touch all of this
 SESSION_COOKIE_NAME = "JSESSIONID"
@@ -150,4 +153,8 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-AUTH_USER_MODEL = "shopdeckdb.User" 
+AUTH_USER_MODEL = "shopdeckdb.User"
+
+_trusted_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+if _trusted_origins:
+    CSRF_TRUSTED_ORIGINS = _trusted_origins.split(',')
