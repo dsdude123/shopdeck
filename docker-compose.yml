@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${DATA_DIR:-./data}/postgres:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-shopdeck}
       POSTGRES_USER: ${POSTGRES_USER:-shopdeck}
@@ -20,9 +20,9 @@ services:
     entrypoint: ["/app/docker-entrypoint.sh"]
     command: gunicorn shopdeck.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
     volumes:
-      - static_files:/app/_static
-      - cdn_data:/app/cdn
-      - assetcdn_data:/app/assetcdn
+      - ${DATA_DIR:-./data}/static:/app/_static
+      - ${DATA_DIR:-./data}/cdn:/app/cdn
+      - ${DATA_DIR:-./data}/assetcdn:/app/assetcdn
     environment:
       - DJANGO_SETTINGS_MODULE=shopdeck.settings
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
@@ -56,8 +56,8 @@ services:
     entrypoint: ["/app/docker-entrypoint.sh"]
     command: gunicorn main:app --bind 0.0.0.0:5000 --workers 3 --timeout 120
     volumes:
-      - cdn_data:/app/cdn
-      - assetcdn_data:/app/assetcdn
+      - ${DATA_DIR:-./data}/cdn:/app/cdn
+      - ${DATA_DIR:-./data}/assetcdn:/app/assetcdn
     environment:
       - DJANGO_SETTINGS_MODULE=shopdeck.settings
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
@@ -79,33 +79,23 @@ services:
       - "5000"
 
   nginx:
-    image: nginx:alpine
+    build: ./nginx
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-80}:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_files:/app/_static:ro
-      - cdn_data:/app/cdn:ro
-      - assetcdn_data:/app/assetcdn:ro
+      - ${DATA_DIR:-./data}/static:/app/_static:ro
+      - ${DATA_DIR:-./data}/cdn:/app/cdn:ro
+      - ${DATA_DIR:-./data}/assetcdn:/app/assetcdn:ro
     depends_on:
       - django
       - flask
 
   proxy:
-    image: mitmproxy/mitmproxy
+    build: ./proxy
     restart: unless-stopped
     ports:
       - "${PROXY_PORT:-8888}:8888"
-    volumes:
-      - ./proxy/addon.py:/addon/addon.py:ro
-    command: mitmdump --mode regular --listen-port 8888 -s /addon/addon.py --set block_global=false
     depends_on:
       - django
       - flask
-
-volumes:
-  postgres_data:
-  static_files:
-  cdn_data:
-  assetcdn_data:
