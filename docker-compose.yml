@@ -9,10 +9,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-shopdeck}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shopdeck}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U shopdeck -d shopdeck"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   django:
     build: .
