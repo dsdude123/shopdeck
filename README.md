@@ -52,22 +52,6 @@ Use `cia-helper.py` to import 3DS CIA files into the CDN:
 docker compose exec django python cia-helper.py <path-to-file.cia>
 ```
 
-### Useful Commands
-
-```bash
-# View logs
-docker compose logs -f
-
-# Stop services
-docker compose down
-
-# Reset database (destructive)
-docker compose down -v
-
-# Create additional admin users
-docker compose exec django python manage.py createsuperuser
-```
-
 ## Local Development (without Docker)
 
 ```bash
@@ -105,6 +89,10 @@ All settings can be configured via environment variables (see `.env.example`). W
 | `IN_MAINTENANCE` | Enable maintenance mode | `False` |
 | `DJANGO_SUPERUSER_USERNAME` | Initial admin username | *(optional)* |
 | `DJANGO_SUPERUSER_PASSWORD` | Initial admin password | *(optional)* |
+
+## Legal Disclaimer
+
+Shopdeck is a server application only. It does not include, distribute, or provide any game ROMs, CIAs, or other copyrighted content. You are responsible for ensuring that any content you host or use with Shopdeck has been legally acquired. This project is intended for use with your own legally owned digital content.
 
 ## Credits
 
