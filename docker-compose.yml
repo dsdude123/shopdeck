@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-shopdeck}
       POSTGRES_USER: ${POSTGRES_USER:-shopdeck}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U shopdeck -d shopdeck"]
       interval: 10s
