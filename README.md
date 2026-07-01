@@ -42,7 +42,7 @@ This starts 5 services:
 
 ### Web Portal
 
-Browse to `http://<server-ip>/` to access the web portal. The admin panel is at `http://<server-ip>/admin/` (login with the credentials from your `.env`).
+Browse to `http://<server-ip>/` to access the web portal. The admin panel is at `http://<server-ip>/admin/` — it has no login and grants full superuser access by default. This is intended for trusted local networks only; **do not expose this server to the public Internet.**
 
 ### Managing Content
 
@@ -87,8 +87,7 @@ All settings can be configured via environment variables (see `.env.example`). W
 | `METADATA_API_URL` | Hostname for API/metadata | `ninja.ctr.shop.nintendo.net` |
 | `WEBUI_NAME` | Name shown in web portal | `Shopdeck` |
 | `IN_MAINTENANCE` | Enable maintenance mode | `False` |
-| `DJANGO_SUPERUSER_USERNAME` | Initial admin username | *(optional)* |
-| `DJANGO_SUPERUSER_PASSWORD` | Initial admin password | *(optional)* |
+| `ADMIN_USERNAME` | Username of the auto-created admin superuser | `admin` |
 
 ## Legal Disclaimer
 

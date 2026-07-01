@@ -1,8 +1,36 @@
 '''
 General purpose Middleware for both the eShop & Web UI servers
 '''
+import os
 from shopdeck import settings
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.contrib.auth import get_user_model, login
+
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+
+class AdminAutologinMiddleware(object):
+	'''
+	Grants passwordless superuser access to /admin/. There is intentionally no
+	login system for the admin: any request under /admin/ is auto-authenticated
+	as a superuser (created on demand). This is LAN-only by design — keep this
+	server off the public Internet.
+	'''
+	def __init__(self, get_response):
+		self.get_response = get_response
+
+	def __call__(self, request):
+		if request.path.startswith("/admin") and not request.user.is_authenticated:
+			User = get_user_model()
+			user, _ = User.objects.get_or_create(
+				username=ADMIN_USERNAME,
+				defaults={"is_staff": True, "is_superuser": True, "is_active": True},
+			)
+			if not (user.is_staff and user.is_superuser and user.is_active):
+				user.is_staff = user.is_superuser = user.is_active = True
+				user.save(update_fields=["is_staff", "is_superuser", "is_active"])
+			login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+			request.user = user
+		return self.get_response(request)
 
 class ShopMiddleware(object):
 	def __init__(self, get_response):
