@@ -1,14 +1,18 @@
-FROM mitmproxy/mitmproxy
+# Pin to mitmproxy 9.0.1: it bundles cryptography 38.x, which links OpenSSL
+# 1.1.1. The 3DS only speaks TLS 1.0/1.1 with old RSA / SHA-1 ciphers, and
+# newer mitmproxy images ship an OpenSSL (3.x) that has those protocols
+# compiled out entirely — it can't even negotiate them, and setting a legacy
+# tls_version_client_min makes mitmproxy crash on startup. OpenSSL 1.1.1 still
+# supports them, so the eShop's HTTPS handshakes can complete and its requests
+# reach the addon (instead of only the plaintext connection test showing up
+# while the console reports 007-2705).
+FROM mitmproxy/mitmproxy:9.0.1
 COPY addon.py /addon/addon.py
-# The 3DS only speaks TLS 1.1 with old RSA / SHA-1 ciphers. Modern mitmproxy
-# (built on OpenSSL 3.x) refuses that ClientHello by default, so the eShop's
-# HTTPS handshakes fail before any request is parsed — which is why only the
-# plaintext connection test (port 80, no TLS) ever shows up in the logs while
-# the console reports 007-2705. Lower the accepted TLS floor to SSL3 (this also
-# enables TLS 1.0/1.1) and drop the OpenSSL security level to 0 so the weak
-# legacy ciphers the console offers are negotiable.
+# Lower the accepted TLS floor to TLS 1.0 (the console negotiates 1.1) and drop
+# the OpenSSL security level to 0 so the weak legacy ciphers it offers are
+# negotiable.
 CMD ["mitmdump", "--mode", "regular", "--listen-port", "8888", \
      "-s", "/addon/addon.py", \
      "--set", "block_global=false", \
-     "--set", "tls_version_client_min=SSL3", \
+     "--set", "tls_version_client_min=TLS1", \
      "--set", "ciphers_client=DEFAULT@SECLEVEL=0"]
