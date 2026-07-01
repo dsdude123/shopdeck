@@ -9,8 +9,13 @@ DJANGO_PORT = 8000
 def request(flow: http.HTTPFlow):
     host = flow.request.pretty_host
 
+    # The 3DS connection test (conntest.nintendowifi.net) must reach the real
+    # Nintendo endpoint. The console doesn't just check for a 200 — it validates
+    # the "X-Organization: Nintendo" response header, and treats its absence as a
+    # captive portal / no-internet condition. Per the development-setup wiki, only
+    # the eShop hostnames are redirected; conntest passes straight through to the
+    # internet so the console gets the genuine response (header included).
     if host == "conntest.nintendowifi.net":
-        flow.response = http.Response.make(200, b"", {"Content-Type": "text/plain"})
         return
 
     if "nintendowifi.net" in host:
