@@ -16,6 +16,15 @@ from io import BytesIO
 
 print("Metadata (Samurai) Starting Up")
 
+def _int(request, name, default=0):
+    v = request.GET.get(name)
+    if v is None or v == "":
+        return default
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return default
+
 @csrf_exempt
 def news(request, region):
     news = announcement.objects.all().order_by("-date")
@@ -71,7 +80,7 @@ def directory(request, region, cid):
     except ObjectDoesNotExist:
         return JsonResponse({"error": True})
     if request.GET.get("platform[]") == None and request.GET.get("genre[]") == None and request.GET.get("publisher[]") == None and request.GET.get("price_max")==None and request.GET.get("price_min")==None:
-        titles = Title.objects.filter(category=dir, public=True).order_by('-date')[int(request.GET.get("offset")):25+25]
+        titles = Title.objects.filter(category=dir, public=True).order_by('-date')[_int(request, "offset"):25+25]
         total = titles.count()
         movies = movie.objects.filter(category=dir).order_by('-date')
         total_movie = movies.count()
@@ -100,13 +109,13 @@ def directory(request, region, cid):
         else:
             publisherl = request.GET.get("publisher[]").split(",")
         if request.GET.get("price_max") != None and request.GET.get("price_min") == None:
-            titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")),category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+            titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")),category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
         if request.GET.get("price_min") != None and request.GET.get("price_max") == None:
-            titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")),category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+            titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")),category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
         if request.GET.get("price_min") != None and request.GET.get("price_max") == None:
-            titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")),price__lte=int(request.GET.get("price_max")),category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+            titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")),price__lte=int(request.GET.get("price_max")),category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
         if request.GET.get("price_max") == None and request.GET.get("price_min")==None:
-            titles = Title.objects.filter(category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+            titles = Title.objects.filter(category=dir, platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
         total = titles.count()
     alltitles = []
     i = 0
@@ -133,7 +142,7 @@ def directory(request, region, cid):
             i = i + 1
     except:
         pass
-    res = {"directory": {"name": dir.name, "icon_url": dir.icon_url, "icon_width": 128, "icon_height": 96, "banner_url": dir.banner_url, "contents": {"content": alltitles, "length": len(alltitles), "offset": int(request.GET.get("offset")), "total": total}, "id": dir.id, "type": "search", "component": "title"}}
+    res = {"directory": {"name": dir.name, "icon_url": dir.icon_url, "icon_width": 128, "icon_height": 96, "banner_url": dir.banner_url, "contents": {"content": alltitles, "length": len(alltitles), "offset": _int(request, "offset"), "total": total}, "id": dir.id, "type": "search", "component": "title"}}
     return JsonResponse(res)
     
 @csrf_exempt
@@ -189,8 +198,8 @@ def publishers(request, region):
 
 @csrf_exempt
 def contents(request, region):
-    search_term = unquote(request.GET.get("freeword"))
-    all_titles = Title.objects.filter(name__icontains=search_term, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+    search_term = unquote(request.GET.get("freeword") or "")
+    all_titles = Title.objects.filter(name__icontains=search_term, public=True).order_by("-date")[_int(request, "offset"):25+25]
     total = all_titles.count()
     movies = movie.objects.filter(name__icontains=search_term).order_by('-date')
     total_movie = movies.count()
@@ -217,19 +226,19 @@ def contents(request, region):
             dimension = "2d"
         titles.append({"movie": {"name": Movie.name, "banner_url": Movie.banner_url, "thumbnail_url": Movie.thumbnail_url, "files": {"file": [{"format": "moflex", "movie_url": Movie.moflex_url, "width": 400, "height": 200, "dimension": dimension, "play_time_sec": Movie.time_in_sec}]}, "id": Movie.id, "new": Movie.new}, "index": i})
         i = i + 1
-    res = {"contents": {"content": titles, "length": len(titles), "offset": int(request.GET.get("offset")), "total": total}}
+    res = {"contents": {"content": titles, "length": len(titles), "offset": _int(request, "offset"), "total": total}}
     return JsonResponse(res)
 
 @csrf_exempt
 def titles(request, region):
     if request.GET.get("platform[]") == None and request.GET.get("genre[]") == None and request.GET.get("publisher[]") == None and request.GET.get("price_max")==None and request.GET.get("price_min")==None and request.GET.get("title[]") == None:
         if request.GET.get("freeword") != None:
-            search_term = unquote(request.GET.get("freeword"))
-            all_titles = Title.objects.filter(name__icontains=search_term, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+            search_term = unquote(request.GET.get("freeword") or "")
+            all_titles = Title.objects.filter(name__icontains=search_term, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("release_date_after") == None:
                 movies = movie.objects.filter(name__icontains=search_term).order_by('-date')
         if request.GET.get('title[]') == None:
-            all_titles = Title.objects.filter(public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+            all_titles = Title.objects.filter(public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("release_date_after") == None:
                 movies = movie.objects.all().order_by('-date')
         total = all_titles.count()
@@ -260,24 +269,24 @@ def titles(request, region):
         else:
             publisherl = request.GET.get("publisher[]").split(",")
         if request.GET.get("freeword") != None:
-            search_term = unquote(request.GET.get("freeword"))
+            search_term = unquote(request.GET.get("freeword") or "")
             if request.GET.get("price_max") != None and request.GET.get("price_min") == None:
-                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")), name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")), name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("price_min") != None and request.GET.get("price_max") == None:
-                all_titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")),name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")),name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("price_max") != None and request.GET.get("price_min") != None:
-                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")),price__gte=int(request.GET.get("price_min")),name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")),price__gte=int(request.GET.get("price_min")),name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("price_max") == None and request.GET.get("price_min")==None:
-                all_titles = Title.objects.filter(name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(name__icontains=search_term,platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
         else:
             if request.GET.get("price_max") != None and request.GET.get("price_min") == None:
-                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")), platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")), platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("price_min") != None and request.GET.get("price_max") == None:
-                all_titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")), platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(price__gte=int(request.GET.get("price_min")), platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("price_max") != None and request.GET.get("price_min") != None:
-                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")),price__gte=int(request.GET.get("price_min")),platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(price__lte=int(request.GET.get("price_max")),price__gte=int(request.GET.get("price_min")),platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
             if request.GET.get("price_max") == None and request.GET.get("price_min")==None:
-                all_titles = Title.objects.filter(platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[int(request.GET.get("offset")):25+25]
+                all_titles = Title.objects.filter(platform__in=platforms, genre__in=genrel, publisher__in=publisherl, public=True).order_by("-date")[_int(request, "offset"):25+25]
         total = all_titles.count()
     if request.GET.get("title[]") != None:
         title_ids = request.GET.get("title[]").split(",")
@@ -317,7 +326,7 @@ def titles(request, region):
     if request.GET.get("offset") == None:
         offset = 0
     else:
-        offset = int(request.GET.get("offset"))
+        offset = _int(request, "offset")
     res = {"contents": {"content": titles, "length": len(titles), "offset": offset, "total": total}}
     return JsonResponse(res)
 
@@ -336,7 +345,7 @@ def viewmovie(request, region, mid):
 
 @csrf_exempt
 def movies_content(request, region):
-    movies = movie.objects.all().order_by('-date')[int(request.GET.get("offset")):25+25]
+    movies = movie.objects.all().order_by('-date')[_int(request, "offset"):25+25]
     total = movies.count()
     all_movies = []
     i = 0
@@ -352,7 +361,7 @@ def movies_content(request, region):
             dimension = "2d"
         all_movies.append({"movie": {"name": Movie.name, "banner_url": Movie.banner_url, "thumbnail_url": Movie.thumbnail_url, "files": {"file": [{"format": "moflex", "movie_url": Movie.moflex_url, "width": 400, "height": 200, "dimension": dimension, "play_time_sec": Movie.time_in_sec}]}, "id": Movie.id, "new": Movie.new}, "index": i})
         i = i + 1
-    res = {"contents": {"content": all_movies, "length": len(all_movies), "offset": int(request.GET.get("offset")), "total": total}}
+    res = {"contents": {"content": all_movies, "length": len(all_movies), "offset": _int(request, "offset"), "total": total}}
     return JsonResponse(res)
 
 #This need to be checked a bit
@@ -408,14 +417,11 @@ def ranking(request, region, rid):
             "device": "CTR"
         }
 
-        rating_system_name = title.parentalControl.parental_system_name if title.parentalControl else None
-        rating_system_id = title.parentalControl.id if title.parentalControl else None
-        rating_icons = [
-            {"url": title.parentalControl.icon_url_normal, "type": "normal"} if title.parentalControl else None,
-            {"url": title.parentalControl.icon_url_small, "type": "small"} if title.parentalControl else None
-        ]
-        rating_name = title.parentalControl.age_name if title.parentalControl else None
-        rating_age = title.parentalControl.age_number if title.parentalControl else None
+        rating_system_name = None
+        rating_system_id = None
+        rating_icons = []
+        rating_name = None
+        rating_age = None
 
         ranking_list.append({
             "title": {
@@ -452,7 +458,7 @@ def ranking(request, region, rid):
                 "aoc_available": False,
                 "in_app_purchase": title.in_app_purchase,
                 "release_date_on_original": str(title.date),
-                "name": "• " + title.region.initial + " • " + "\n" + title.name,
+                "name": title.name,
                 "id": title.id,
                 "product_code": title.product_code,
                 "icon_url": title.icon_url,
