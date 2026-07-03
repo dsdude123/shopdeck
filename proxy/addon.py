@@ -1,5 +1,6 @@
 import os
-from mitmproxy import http
+import re
+from mitmproxy import http, ctx
 
 FLASK_HOST = "flask"
 FLASK_PORT = 5000
@@ -19,6 +20,18 @@ META_HOST = os.environ.get("METADATA_API_URL", "ninja.ctr.shop.nintendo.net")
 CAPTURE = os.environ.get("PROXY_CAPTURE", "1") not in ("0", "false", "False", "")
 MAX_BODY = 4096
 TEXT_HINTS = ("json", "xml", "text", "html")
+
+
+def running():
+    # Blind-tunnel every host EXCEPT the two eShop hosts, exactly like Charles
+    # in the dev-setup wiki. mitmproxy's default is to MITM everything; that
+    # makes firmware services (nus NetUpdate, nppl privacy policy, conntest)
+    # complete a local TLS handshake and then fail upstream, which the console's
+    # environment check rejects. Ignoring them means they pass through
+    # untouched and fail as a clean connection failure the console tolerates.
+    hosts = "|".join(re.escape(h) for h in (SOAP_HOST, META_HOST))
+    ctx.options.ignore_hosts = [r"^(?!(?:" + hosts + r")(?::\d+)?$).*"]
+    print(f"[addon] intercepting only {SOAP_HOST} + {META_HOST}; tunnelling the rest", flush=True)
 
 
 def http_connect(flow: http.HTTPFlow):
