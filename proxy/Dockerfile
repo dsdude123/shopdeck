@@ -16,9 +16,16 @@ COPY addon.py /addon/addon.py
 # (dead) Nintendo servers first — doing so just spams "Server TLS handshake
 # failed / certificate verify failed" before the request is rerouted. Lazy
 # defers the upstream connection until after the addon has rewritten the host.
+# ssl_insecure=true: hosts we don't redirect (nus NetUpdate, nppl privacy
+# policy, ...) pass through to the REAL Nintendo servers, which present a cert
+# chain mitmproxy doesn't trust. Without this, mitmproxy aborts the upstream
+# handshake ("Certificate verify failed") and the console gets a broken
+# passthrough. Disabling upstream verification lets those relay their genuine
+# responses — the equivalent of Charles tunnelling them in the dev-setup wiki.
 CMD ["mitmdump", "--mode", "regular", "--listen-port", "8888", \
      "-s", "/addon/addon.py", \
      "--set", "block_global=false", \
      "--set", "connection_strategy=lazy", \
+     "--set", "ssl_insecure=true", \
      "--set", "tls_version_client_min=TLS1", \
      "--set", "ciphers_client=DEFAULT@SECLEVEL=0"]
