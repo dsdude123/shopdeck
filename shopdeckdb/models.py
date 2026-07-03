@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 class Client3DS(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     consoleid = models.CharField(max_length=12, null=False)
     devicecert_consoleid = models.CharField(max_length=8, null=True, blank=True)
     devicetoken = models.CharField(max_length=21, null=False)
@@ -27,13 +27,13 @@ class customTitleID(models.Model):
         return "Title "+self.tid+" for user "+self.related_to.consoleid
 
 class publisher(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     publisher_name = models.CharField(max_length=20)
     def __str__(self):
         return self.publisher_name
 
 class category(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     index = models.IntegerField(default=0, null=False)
     name = models.CharField(max_length=25)
     standard = models.BooleanField(default=False)
@@ -45,19 +45,19 @@ class category(models.Model):
         return "Category "+self.name
 
 class genre(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.name
 
 class platform(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.name
 
 class Title(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     tid = models.CharField(max_length=16, null=False)
     name = models.CharField(max_length=25)
     desc = models.TextField(default="", null=False)
@@ -83,7 +83,7 @@ class Title(models.Model):
         return self.name+" by "+self.publisher.publisher_name+" published on "+str(self.date)  
 
 class item(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     title = models.ForeignKey(Title, null=False, on_delete=models.CASCADE)
     itemcode = models.CharField(max_length=16)
     price = models.IntegerField(default=0, null=False)
@@ -92,7 +92,7 @@ class item(models.Model):
         return "Item "+str(self.id)+" for "+self.title.name
 
 class movie(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=25)
     thumbnail_url = models.TextField(null=False)
     banner_url = models.TextField(null=False)
@@ -127,7 +127,7 @@ class wishlistedTitle(models.Model):
         return "Wishlisted title "+self.title.name+" wanted by "+self.owner.consoleid
 
 class announcement(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=50, null=False)
     content = models.TextField(null=False)
     date = models.DateTimeField(auto_now_add=True, null=False)
@@ -151,7 +151,7 @@ class redeemableCard(models.Model):
         return self.code
     
 class searchCategory(models.Model):
-    id = models.IntegerField(primary_key=True, blank=True)
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=35)
     platform_list = models.TextField(verbose_name="Platform List (seperate each platform by a comma)")
     def __str__(self):
