@@ -6,6 +6,13 @@ FLASK_PORT = 5000
 DJANGO_HOST = "django"
 DJANGO_PORT = 8000
 
+# The wiki redirects ONLY the two eShop hostnames; everything else the console
+# contacts (nus NetUpdate, nppl privacy policy, conntest, ...) is left to reach
+# its real destination. Match that exactly instead of redirecting whole TLDs —
+# otherwise firmware services get a bogus 404 from our servers.
+SOAP_HOST = os.environ.get("SOAP_URL", "ecs.c.shop.nintendowifi.net")
+META_HOST = os.environ.get("METADATA_API_URL", "ninja.ctr.shop.nintendo.net")
+
 # Temporary debug capture: dump connects, requests, full bodies, and errors to
 # stdout (visible via `docker compose logs proxy`). Set PROXY_CAPTURE=0 to
 # disable without rebuilding. Defaults on while we diagnose the eShop flow.
@@ -31,20 +38,18 @@ def request(flow: http.HTTPFlow):
     if CAPTURE:
         print(f">>> {flow.request.method} {host}{flow.request.path}", flush=True)
 
-    # The 3DS connection test (conntest.nintendowifi.net) must reach the real
-    # Nintendo endpoint. The console doesn't just check for a 200 — it validates
-    # the "X-Organization: Nintendo" response header, and treats its absence as a
-    # captive portal / no-internet condition. Per the development-setup wiki, only
-    # the eShop hostnames are redirected; conntest passes straight through to the
-    # internet so the console gets the genuine response (header included).
-    if host == "conntest.nintendowifi.net":
-        return
-
-    if "nintendowifi.net" in host:
+    # Redirect ONLY the two eShop hostnames the console was advertised in
+    # service_hosts. Everything else — the 3DS connection test
+    # (conntest.nintendowifi.net, which validates the "X-Organization: Nintendo"
+    # header), the NetUpdate/environment check (nus...), the privacy-policy list
+    # (nppl...), etc. — passes straight through to its real destination, exactly
+    # as in the development-setup wiki's two-host proxy config. Sending those
+    # firmware services to our servers yields a bogus 404 the eShop rejects.
+    if host == SOAP_HOST:
         flow.request.host = FLASK_HOST
         flow.request.port = FLASK_PORT
         flow.request.scheme = "http"
-    elif "nintendo.net" in host:
+    elif host == META_HOST:
         flow.request.host = DJANGO_HOST
         flow.request.port = DJANGO_PORT
         flow.request.scheme = "http"
