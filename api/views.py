@@ -36,15 +36,15 @@ def open(request):
    s['deviceid'] = data.get("device_id")
    s.create()
    currenttime = int(round(time.time()*1000))
-   if request.headers.get("User-Agent") != None:
-      if request.headers.get("User-Agent").startswith("MINT") and request.get_full_path() == "/ninja/ws/my/session/!open?_type=json":
-         #LOTS of placeholder here coz i dont have access to nintendo servers
-         res = {"session_config":{"pid":ds.id,"account_id":"Somebody","mii":{"name":"Somebody","icon_url":"https://example.com/"},"country":ds.country,"saved_lang":ds.language,"shop_account_initialized":False,"device_link_updated":False,"owned_titles_modified":currenttime,"shared_titles_last_modified":currenttime,"age":25,"server_time":currenttime,"devices":{"device":[{"name":"CTR","initial_device_account_id":str(ds.id),"npns_ready":True,"id":4}]},"wishlist_last_modified":currenttime,"parental_controls":{"parental_control":[{"device":"CTR","type":"game_rating_age","value":0},{"device":"CTR","type":"game_rating_lock","value":0},{"device":"CTR","type":"shopping","value":0}]},"auto_billing_contracted":False,"id":s.session_key}}
-      else:
-         res = {"session_config":{"country":ds.country,"saved_lang":ds.language,"shop_account_initialized":False,"device_link_updated":False,"owned_titles_modified":currenttime,"shared_titles_last_modified":currenttime,"server_time":currenttime,"devices":{"device":[{"name":"CTR","id":4}]},"auto_billing_contracted":False,"id":s.session_key}}
-      res = JsonResponse(res)
-      res.set_cookie("JSESSIONID", s.session_key, httponly=True, path="/ninja")
-      return res
+   ua = request.headers.get("User-Agent") or ""
+   if ua.startswith("MINT") and request.get_full_path() == "/ninja/ws/my/session/!open?_type=json":
+      #LOTS of placeholder here coz i dont have access to nintendo servers
+      res = {"session_config":{"pid":ds.id,"account_id":"Somebody","mii":{"name":"Somebody","icon_url":"https://example.com/"},"country":ds.country,"saved_lang":ds.language,"shop_account_initialized":False,"device_link_updated":False,"owned_titles_modified":currenttime,"shared_titles_last_modified":currenttime,"age":25,"server_time":currenttime,"devices":{"device":[{"name":"CTR","initial_device_account_id":str(ds.id),"npns_ready":True,"id":4}]},"wishlist_last_modified":currenttime,"parental_controls":{"parental_control":[{"device":"CTR","type":"game_rating_age","value":0},{"device":"CTR","type":"game_rating_lock","value":0},{"device":"CTR","type":"shopping","value":0}]},"auto_billing_contracted":False,"id":s.session_key}}
+   else:
+      res = {"session_config":{"country":ds.country,"saved_lang":ds.language,"shop_account_initialized":False,"device_link_updated":False,"owned_titles_modified":currenttime,"shared_titles_last_modified":currenttime,"server_time":currenttime,"devices":{"device":[{"name":"CTR","id":4}]},"auto_billing_contracted":False,"id":s.session_key}}
+   res = JsonResponse(res)
+   res.set_cookie("JSESSIONID", s.session_key, httponly=True, path="/ninja")
+   return res
 
 @csrf_exempt
 def close(request):
@@ -433,19 +433,16 @@ def votable_titles(request):
                 },
                 "rating_info": {
                     "rating_system": {
-                        "name": owned_title.title.parentalControl.parental_system_name,
-                        "id": owned_title.title.parentalControl.parental_system_id
+                        "name": None,
+                        "id": None
                     },
                     "rating": {
                         "icons": {
-                            "icon": [
-                                {"url": owned_title.title.parentalControl.icon_url_normal, "type": "normal"},
-                                {"url": owned_title.title.parentalControl.icon_url_small, "type": "small"}
-                            ]
+                            "icon": []
                         },
-                        "name": owned_title.title.parentalControl.age_name,
-                        "age": owned_title.title.parentalControl.age_number,
-                        "id": owned_title.title.parentalControl.id
+                        "name": None,
+                        "age": None,
+                        "id": None
                     }
                 },
                 "release_date_on_eshop": str(owned_title.title.date),
@@ -453,7 +450,7 @@ def votable_titles(request):
                 "retail_sales": False,
                 "eshop_sales": owned_title.title.is_not_downloadable,
                 "in_app_purchase": owned_title.title.in_app_purchase,
-                "name": "• "+owned_title.title.region.initial+" • "+"\n"+owned_title.title.name,
+                "name": owned_title.title.name,
                 "id": owned_title.title.id,
                 "icon_url": owned_title.title.icon_url,
                 "banner_url": owned_title.title.banner_url

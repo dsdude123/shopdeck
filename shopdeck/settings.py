@@ -42,10 +42,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # CSRF protection intentionally omitted: Shopdeck is meant to run only on a
+    # trusted local network, never on the public Internet.
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'shopdeckdb.middleware.AdminAutologinMiddleware',
     'shopdeckdb.middleware.ShopMiddleware'
 ]
 
@@ -154,7 +156,3 @@ STATICFILES_DIRS = [
 ]
 
 AUTH_USER_MODEL = "shopdeckdb.User"
-
-_trusted_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
-if _trusted_origins:
-    CSRF_TRUSTED_ORIGINS = _trusted_origins.split(',')

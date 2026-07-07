@@ -42,10 +42,7 @@ services:
       - TOS_ESHOP=${TOS_ESHOP:-}
       - WEBUI_NAME=${WEBUI_NAME:-Shopdeck}
       - MAINTENANCE_MSG=${MAINTENANCE_MSG:-Maintenance message.}
-      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-}
-      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
-      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-}
-      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - RUN_MIGRATIONS=true
     depends_on:
       db:
@@ -99,6 +96,9 @@ services:
     restart: unless-stopped
     ports:
       - "${PROXY_PORT:-8888}:8888"
+    environment:
+      - SOAP_URL=${SOAP_URL:-ecs.c.shop.nintendowifi.net}
+      - METADATA_API_URL=${METADATA_API_URL:-ninja.ctr.shop.nintendo.net}
     depends_on:
       - django
       - flask
