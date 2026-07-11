@@ -302,7 +302,7 @@ def tax_location(request):
       ds = Client3DS.objects.get(consoleid=request.session["deviceid"])
    except:
       return JsonResponse({"error": {"code": "3010","message": "The connection to the server has\ntimed out due to user inactivity.\n\nPlease restart Nintendo eShop\nand try again."}}, status=400)
-   res = {"tax_location": {"state": "United States", "state_code": ds.country, "id": 71647}}
+   res = {"tax_location": {"state": "US", "state_code": ds.country, "id": 71647}}
    return JsonResponse(res)
 
 @csrf_exempt
