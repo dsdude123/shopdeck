@@ -38,6 +38,7 @@ services:
       - POSTGRES_PORT=5432
       - SOAP_URL=${SOAP_URL:-ecs.c.shop.nintendowifi.net}
       - METADATA_API_URL=${METADATA_API_URL:-ninja.ctr.shop.nintendo.net}
+      - ASSET_URL=${ASSET_URL:-${SOAP_URL:-ecs.c.shop.nintendowifi.net}}
       - IN_MAINTENANCE=${IN_MAINTENANCE:-False}
       - TOS_ESHOP=${TOS_ESHOP:-}
       - WEBUI_NAME=${WEBUI_NAME:-Shopdeck}
@@ -49,6 +50,35 @@ services:
         condition: service_healthy
     expose:
       - "8000"
+
+  importer:
+    build: .
+    restart: unless-stopped
+    entrypoint: ["/app/docker-entrypoint.sh"]
+    command: python manage.py watch_intake
+    volumes:
+      - ${DATA_DIR:-./data}/cdn:/app/cdn
+      - ${DATA_DIR:-./data}/assetcdn:/app/assetcdn
+      - ${DATA_DIR:-./data}/intake:/app/intake
+      - ${BOOT9_PATH:-./boot9.bin}:/root/3ds/boot9.bin:ro
+    environment:
+      - DJANGO_SETTINGS_MODULE=shopdeck.settings
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - POSTGRES_DB=${POSTGRES_DB:-shopdeck}
+      - POSTGRES_USER=${POSTGRES_USER:-shopdeck}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - SOAP_URL=${SOAP_URL:-ecs.c.shop.nintendowifi.net}
+      - METADATA_API_URL=${METADATA_API_URL:-ninja.ctr.shop.nintendo.net}
+      - ASSET_URL=${ASSET_URL:-${SOAP_URL:-ecs.c.shop.nintendowifi.net}}
+      - RUN_MIGRATIONS=false
+    depends_on:
+      db:
+        condition: service_healthy
+      django:
+        condition: service_started
 
   flask:
     build: .

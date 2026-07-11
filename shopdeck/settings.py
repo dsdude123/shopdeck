@@ -138,6 +138,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SOAP_URL = os.environ.get('SOAP_URL', 'ecs.c.shop.nintendowifi.net')
 METADATA_API_URL = os.environ.get('METADATA_API_URL', 'ninja.ctr.shop.nintendo.net')
 
+# Host used to build absolute URLs for title icons/banners served out of the
+# assetcdn/ directory (at /assets/). Both the 3DS proxy and nginx route
+# /assets/ to the Flask server, so this defaults to SOAP_URL (the Flask host).
+ASSET_URL = os.environ.get('ASSET_URL') or SOAP_URL
+
+# Folder watched by the automatic CIA importer (manage.py watch_intake). Drop
+# .cia files here and they are imported automatically.
+INTAKE_DIR = os.environ.get('INTAKE_DIR', str(BASE_DIR / 'intake'))
+
 TOS_ESHOP = os.environ.get('TOS_ESHOP', "This is YOUR own custom shop!\nStart customizing it!\n(change this message in shopdeck/settings.py)")
 
 MAINTENANCE_MSG = os.environ.get('MAINTENANCE_MSG', 'Maintenance message.')

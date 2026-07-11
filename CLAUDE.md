@@ -53,9 +53,30 @@ docker compose logs -f
 # Stop services
 docker compose down
 
-# Import CIA files
+# Import CIA files (manual extraction helper — prints instructions only)
 docker compose exec django python cia-helper.py <file.cia>
 ```
+
+### Automatic CIA Import
+
+The `importer` service (in `docker-compose.yml`) runs `manage.py watch_intake`,
+which watches `${DATA_DIR}/intake` for dropped `.cia` files. Each is imported
+end-to-end automatically: content `.app` files + `tmd.bin` are written to
+`cdn/<TITLE_ID>/`, the SMDH icon to `assetcdn/icons/<TITLE_ID>.png`, and an
+immediately-public, free `Title` row is created (idempotent — re-dropping a CIA
+updates it). Processed files move to `intake/processed/`; failures move to
+`intake/failed/`. Decryption needs `boot9.bin` — set `BOOT9_PATH` in `.env`.
+
+```bash
+# Auto-import: just drop a file into the intake folder
+cp game.cia data/intake/
+
+# One-shot manual import (file or a directory of .cia files)
+docker compose exec importer python manage.py import_cia /app/intake/game.cia
+```
+
+The shared import logic lives in `shopdeckdb/cia_import.py`, used by both the
+`import_cia` and `watch_intake` management commands.
 
 ### Proxy Architecture
 
