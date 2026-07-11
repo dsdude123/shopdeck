@@ -65,7 +65,7 @@ end-to-end automatically: content `.app` files + `tmd.bin` are written to
 `cdn/<TITLE_ID>/`, the SMDH icon to `assetcdn/icons/<TITLE_ID>.png`, and an
 immediately-public, free `Title` row is created (idempotent — re-dropping a CIA
 updates it). Processed files move to `intake/processed/`; failures move to
-`intake/failed/`. Decryption needs `boot9.bin` — set `BOOT9_PATH` in `.env`.
+`intake/failed/`. Decryption needs `boot9.bin` — place it at `data/bootrom/boot9.bin`.
 
 ```bash
 # Auto-import: just drop a file into the intake folder

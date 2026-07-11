@@ -60,7 +60,7 @@ services:
       - ${DATA_DIR:-./data}/cdn:/app/cdn
       - ${DATA_DIR:-./data}/assetcdn:/app/assetcdn
       - ${DATA_DIR:-./data}/intake:/app/intake
-      - ${BOOT9_PATH:-./boot9.bin}:/root/3ds/boot9.bin:ro
+      - ${DATA_DIR:-./data}/bootrom:/root/3ds:ro
     environment:
       - DJANGO_SETTINGS_MODULE=shopdeck.settings
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
